@@ -1,88 +1,201 @@
-const gridWidth = getComputedStyle(document.body).getPropertyValue(
-  "--grid-width"
-);
-const accentColor = getComputedStyle(document.body).getPropertyValue(
-  "--accent-color"
-);
-const inactiveColor = getComputedStyle(document.body).getPropertyValue(
-  "--inactive-color"
-);
+const gridWidth = getComputedStyle(document.body).getPropertyValue("--grid-width");
+const accentColor = getComputedStyle(document.body).getPropertyValue("--accent-color");
+const inactiveColor = getComputedStyle(document.body).getPropertyValue("--inactive-color");
 
-const container = document.querySelector(".container");
-const sketchArea = document.querySelector("#sketch-area"); //main container
-const slider = document.querySelector("#slider"); // slider o---0-----o  value - midle meaning.
+const sketchArea = document.querySelector("#sketch-area");
+const slider = document.querySelector("#slider");
 const sliderValue = document.querySelector("#slider-value");
 const gridToggle = document.querySelector("#grid-toggle");
+const penColorPicker = document.querySelector("#pen-color");
+const radonColorToggle = document.querySelector("#rainbow");
+const shadingToggle = document.querySelector("#gradient");
+const eraserToggle = document.querySelector("#eraser");
+const clearSketchButton = document.querySelector("#clear");
 
-let squaresPerSide = 16; //paragraph that shows the sliderValue
-let gridVisible = false;
+let squaresPerSide = 16;
 
-let isDrawing = false;
+let gridLinesVisible = false;
+let drawing = false;
+let randomizingColors = false;
+let shading = false;
+let erasing = false;
+let squarePainted = false;
 
-function toggleGrid() {
-  gridVisible = !gridVisible;
-  gridToggle.style.color = gridVisible ? accentColor : inactiveColor;
+let penColor = "#000000";
+let colorPickerColor = "#000000";
+let shadeAmountHex = "00";
 
-  removeGridSquares();
-  createGridSquares();
+function toggleGridLinesVisibility() {
+    gridLinesVisible = gridLinesVisible ? false : true;
+    gridToggle.style.color = gridLinesVisible ? accentColor : inactiveColor;
+    if (gridLinesVisible) {
+        widthOrHeight = `${(parseInt(gridWidth) / squaresPerSide) - 2}px`
+        sketchArea.childNodes.forEach(square => {square.style.border = "1px solid whitesmoke"});
+    }
+    else if (!gridLinesVisible) {
+        widthOrHeight = `${(parseInt(gridWidth) / squaresPerSide)}px`
+        sketchArea.childNodes.forEach(square => {square.style.border = "none"});
+    }
+    sketchArea.childNodes.forEach(square => {
+        square.style.width = square.style.height = widthOrHeight
+    });
 }
 
-function setBackgroundColor(e) {
-  //color of one div after overing by mouse the gridboard
-if(e.type === "mousedown") {
- isDrawing = true;
- e.target.style.backgroundColor = "black";
-} else if(e.type === "mouseover" && isDrawing) {
-e.target.style.backgroundColor = "black"
-}
-else isDrawing = false;
+function setSquareBackgroundColor(e) {
+    let currentShade = "0";
+    let color = "";
+    
+    if (e.type === "mousedown") {
+      drawing = true;
+        if (randomizingColors) penColor = createRandomColor();
+        // By default e.target.style.background = ""
+        if (shading) {
+            if (e.target.style.backgroundColor != "") {
+                // e.target.style.backgroundColor returns an rgba string
+                // it needs to be converted and broken into penColor and shadingPercentage(opacity)
+                // eg. "rgba(0, 0, 0, 0.7)"
+                penColor = convertRGBAToHexA(e.target.style.backgroundColor);
+                color =  e.target.style.backgroundColor;
+                currentShade = color.substring((color.length - 4), (color.length - 1));
+                penColor = penColor.substring(0, 7) + createShading(currentShade);
+            }
+            else penColor = penColor.substring(0, 7) + "1A";
+            
+        }
+        e.target.style.backgroundColor = penColor;
+    }
+    else if (e.type === "mouseover" && drawing) {
+        if (randomizingColors) penColor = createRandomColor();
+        if (shading) {
+            if (e.target.style.backgroundColor != "") {
+                penColor = convertRGBAToHexA(e.target.style.backgroundColor);
+                color =  e.target.style.backgroundColor;
+                currentShade = color.substring((color.length - 4), (color.length - 1));
+                penColor = penColor.substring(0, 7) + createShading(currentShade);
+            }
+            else penColor = penColor.substring(0, 7) + "1A";       
+        }   
+        e.target.style.backgroundColor = penColor;
+    }
+    else drawing = false;
 }
 
 function createGridSquares() {
-  // the number that was provided by user
-  const numberOfSquares = squaresPerSide * squaresPerSide; //this number provided by used * by itself (e.g. 30*30)
-
-  for (let i = 0; i < numberOfSquares; i++) {
-    const gridCell = document.createElement("div"); //create one div in the main div container
+    const numOfSquares = (squaresPerSide * squaresPerSide);
     let widthOrHeight = 0;
 
-    if (gridVisible) {
-      widthOrHeight = `${parseInt(gridWidth) / squaresPerSide - 2}px`;
-      gridCell.style.border = "1px solid whitesmoke";
-    } else if (!gridVisible) {
-      widthOrHeight = `${parseInt(gridWidth) / squaresPerSide - 2}px`;
-      gridCell.style.border = "1px solid white";
+    for(let i = 0; i < numOfSquares; i++) {
+        const gridSquare = document.createElement("div");
+        
+        if (gridLinesVisible) {
+            widthOrHeight = `${(parseInt(gridWidth) / squaresPerSide) - 2}px`
+            gridSquare.style.border = "1px solid whitesmoke";
+        }
+        else if (!gridLinesVisible) {
+            widthOrHeight = `${(parseInt(gridWidth) / squaresPerSide)}px`
+            gridSquare.style.border = "none";
+        }
+        gridSquare.style.width = gridSquare.style.height = widthOrHeight;
+
+        gridSquare.addEventListener("mousedown", (e) => setSquareBackgroundColor(e));
+        gridSquare.addEventListener("mouseover", (e) => setSquareBackgroundColor(e));
+        gridSquare.addEventListener("mouseup", (e) => setSquareBackgroundColor(e));
+        
+        gridSquare.addEventListener("dragstart", (e) => {
+            e.preventDefault();
+        });
+        
+        sketchArea.appendChild(gridSquare);
     }
-
-    gridCell.style.width = gridCell.style.height = widthOrHeight; // width and height for the one div in the main div container
-    gridCell.addEventListener("mousedown", (e) => setBackgroundColor(e)); //when we over the grid with the mouse, the divs become interactive.
-    gridCell.addEventListener("mouseover", (e) => setBackgroundColor(e)); //when we over the grid with the mouse, the divs become interactive.
-    gridCell.addEventListener("mouseup", (e) => setBackgroundColor(e)); //when we over the grid with the mouse, the divs become interactive.
-
-    gridCell.addEventListener("dragstart", (e) => {
-      e.preventDefault()
-    });
-
-    sketchArea.appendChild(gridCell); //add this one div to the main container
-  }
 }
 
 function removeGridSquares() {
-  // очистки всех дочерних элементов внутри контейнера, который называется sketchArea.
-  while (sketchArea.firstChild) {
-    //Эта строка проверяет, есть ли у контейнера sketchArea хотя бы один дочерний элемент. firstChild — это первый дочерний элемент контейнера.
-    sketchArea.removeChild(sketchArea.firstChild); //Если в sketchArea есть элементы (клетки), условие будет истинным, и цикл while продолжит работу. Если клеток нет, цикл остановится.
-  }
+    while (sketchArea.firstChild) {
+        sketchArea.removeChild(sketchArea.firstChild);
+    }
 }
 
-slider.oninput = function () {
-  squaresPerSide = this.value;
-  //slider.oninput, ты связываешь слайдер с функцией, которая будет выполняться при каждом изменении положения ползунка. Это позволяет, например, динамически обновлять значения на экране без необходимости нажимать кнопку или отправлять форму.
- sliderValue.textContent =`${this.value} x ${this.value} (Resolution)`; // text that provide the slider size
- removeGridSquares(); //
- createGridSquares();
-};
+penColorPicker.addEventListener("input", (e) => {
+    penColor = colorPickerColor = e.target.value;
+    if (shading) toggleShading();
+    if (randomizingColors) toggleUseOfRandomColors();
+    if (erasing) toggleEraser();
+})
 
-gridToggle.addEventListener("click", toggleGrid);
+function toggleUseOfRandomColors() {
+    randomizingColors = randomizingColors ? false : true;
+    if (randomizingColors && erasing) toggleEraser();
+    radonColorToggle.style.color = randomizingColors ? accentColor : inactiveColor;
+    penColor = !randomizingColors ? colorPickerColor : penColor; 
+}
+
+function createRandomColor() {
+    let newColor = "#";
+    let possibleChars = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
+    for (let i = 0; i < 6; i++){
+      let randomIndex = Math.floor(Math.random() * possibleChars.length); 
+      newColor += possibleChars[randomIndex];
+  }
+  return newColor;
+}
+
+function toggleShading() {
+    shading = shading ? false : true;
+    if (shading && erasing) toggleEraser();
+    shadingToggle.style.color = shading ? accentColor : inactiveColor;
+    penColor = !shading ? colorPickerColor : penColor;
+}
+
+function createShading(currentShade) {
+    let shadePercentage = currentShade * 100;
+    if (shadePercentage < 100) shadePercentage += 10;
+
+    shadeAmountHex = (Math.round((shadePercentage / 100) * 255)).toString(16);
+    return (shadeAmountHex);
+}
+
+function toggleEraser() {
+    erasing = erasing ? false : true;
+    if (erasing) {
+        if (randomizingColors) toggleUseOfRandomColors();
+        if (shading) toggleShading();
+    }
+    eraserToggle.style.color = erasing ? accentColor : inactiveColor;
+    penColor = erasing ? "" : colorPickerColor;
+}
+
+function clearSketch() {
+    removeGridSquares();
+    createGridSquares();
+}
+
+function confirmClear(){
+    if (confirm("Your Sketch Wound Be Deleted!")) clearSketch();
+}
+
+function convertRGBAToHexA(rgba, forceRemoveAlpha = false) {
+    return "#" + rgba.replace(/^rgba?\(|\s+|\)$/g, '') // Get's rgba / rgb string values
+      .split(',') // splits them at ","
+      .filter((string, index) => !forceRemoveAlpha || index !== 3)
+      .map(string => parseFloat(string)) // Converts to numbers
+      .map((number, index) => index === 3 ? Math.round(number * 255) : number) // Converts alpha to 255 number
+      .map(number => number.toString(16)) // Converts numbers to hex
+      .map(string => string.length === 1 ? "0" + string : string) // Adds 0 when length of one number is 1
+      .join("") // Puts the array to togehter to create a string
+}
+
+shadingToggle.addEventListener("click", toggleShading);
+radonColorToggle.addEventListener("click", toggleUseOfRandomColors);
+eraserToggle.addEventListener("click", toggleEraser);
+gridToggle.addEventListener("click", toggleGridLinesVisibility);
+clearSketchButton.addEventListener("click", confirmClear);
+
+slider.oninput = function() {
+    squaresPerSide = this.value;
+    sliderValue.textContent = `${this.value} x ${this.value} (Resolution)`;
+    removeGridSquares();
+    createGridSquares();
+}
+sliderValue.textContent = `${slider.value} x ${slider.value} (Resolution)`;
 
 createGridSquares();
