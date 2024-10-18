@@ -1,3 +1,5 @@
+
+
 const gridWidth = getComputedStyle(document.body).getPropertyValue("--grid-width");
 const accentColor = getComputedStyle(document.body).getPropertyValue("--accent-color");
 const inactiveColor = getComputedStyle(document.body).getPropertyValue("--inactive-color");
@@ -5,7 +7,7 @@ const inactiveColor = getComputedStyle(document.body).getPropertyValue("--inacti
 const sketchArea = document.querySelector("#sketch-area");
 const slider = document.querySelector("#slider");
 const sliderValue = document.querySelector("#slider-value");
-const gridToggle = document.querySelector("#grid-toggle");
+const gridToggle = document.querySelector("#grid-switching");
 const penColorPicker = document.querySelector("#pen-color");
 const radonColorToggle = document.querySelector("#rainbow");
 const shadingToggle = document.querySelector("#gradient");
