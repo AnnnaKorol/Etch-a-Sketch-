@@ -42,13 +42,18 @@ body {
   margin-right: 10px;
   border: 1px rgb(243, 185, 185) solid;
   border-radius: 10px;
-  animation: pulse 3s infinite;
+  box-shadow: 5px 5px 5px rgba(193, 162, 158, 0.804);
+  transition: all 0.3s ease;
+  touch-action: manipulation;
 }
 
 
 .top-button:hover {
   color: #aa6804;
+  box-shadow: 0px 2px 20px #A20A3C;
+    top: 3px;
 }
+
 
 .top-button > span {
   cursor: pointer;

@@ -263,8 +263,13 @@ function toggleEraser() {
   penColor = erasing ? "" : colorPickerColor;                                 //Когда включён режим ластика (erasing === true), цвет пера (penColor) устанавливается в пустую строку (""), что, вероятно, означает прозрачный цвет, с которым происходит стирание (перо как бы "рисует" прозрачным цветом). Если ластик выключен, перо снова получает цвет, выбранный через цветовой пикер (colorPickerColor).
 }
 
+//1) if the eraser active, the randomazingColors and shading should be disable.
+//2) if the eraser button is active  -> accentColor, if not --> inactiveColor
+//3) if erazing active, the penColor should be transparant as it make no color in the square. 
 
 //------------------------------------------------------------------------//
+
+//Функция clearSketch() выполняет перезапуск сетки для рисования, удаляя все существующие квадраты и создавая новую чистую сетку. 
 
 function clearSketch() {
   removeGridSquares();
