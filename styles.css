@@ -15,8 +15,6 @@ body {
 .container {
   margin: 0 auto;
   width: var(--grid-width);
-  grid-template-columns: fit-content(100%) fit-content(100%) 1fr;
-
 }
 
 .top {
@@ -66,10 +64,13 @@ body {
 
 #sketch-area {
   display: flex;
+  height:
   flex-wrap: wrap;
   margin: 0 auto;
   background-color: white;
   box-shadow: 0 0 30px 4px rgba(193, 162, 158, 0.804);
+  padding: 0;
+  height: 1000px;
 }
 
 .slider {
