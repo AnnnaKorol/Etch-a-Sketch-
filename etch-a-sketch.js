@@ -40,36 +40,26 @@ let penColor = "#000000";
 let colorPickerColor = "#000000";
 let shadeAmountHex = "00";
 
-
-
-
 //!Grid button logic:
 function gridLineVisibilitySwitching() {
   gridLinesVisible = gridLinesVisible ? false : true;
   gridSwitching.style.color = gridLinesVisible ? accentColor : inactiveColor; //gridLines = accentColor, no-gridLines = inactiveColor
-  if (gridLinesVisible) {
-    widthOrHeight = `${Math.round(
-      parseInt(gridWidth) / (squaresPerSide - 2)
-    )}px`;
-    sketchArea.childNodes.forEach((square) => {
-      square.style.border = "1px solid whitesmoke";
-    });
-  } else if (!gridLinesVisible) {
-    widthOrHeight = `${Math.round(parseInt(gridWidth) / squaresPerSide)}px`;
-    sketchArea.childNodes.forEach((square) => {
-      square.style.border = "none";
-    }); //childNodes позволяет получить все дочерние узлы элемента, включая текст и комментарии, что полезно для работы с полной структурой DOM-элементов. свойство childNodes возвращает только элементы (без текстовых и комментариев)
-  }
+
+  const widthOrHeight = calculateSquareWidth(
+    gridWidth,
+    squaresPerSide,
+    gridLinesVisible
+  );
+
   sketchArea.childNodes.forEach((square) => {
-    square.style.width = square.style.height = widthOrHeight;
+    square.style.width = square.style.height = widthOrHeight + "px";
+    if (gridLinesVisible) {
+      square.style.border = "1px solid whitesmoke";
+    } else {
+      square.style.border = "0";
+    }
   });
 }
-
-
-
-
-
-
 
 //!Drawing on the Sketch area works if the mouse pressed down
 function setSquareBackgroundColor(e) {
@@ -107,37 +97,41 @@ function setSquareBackgroundColor(e) {
   } else drawing = false;
 }
 
+function calculateSquareWidth(gridWidth, squaresPerRow, gridLinesVisible) {
+  const widthForSquareIncludingBorder = Math.floor(
+    parseInt(gridWidth) / squaresPerRow
+  );
 
-
-
-
+  if (gridLinesVisible) {
+    return widthForSquareIncludingBorder - 2;
+  } else {
+    return widthForSquareIncludingBorder;
+  }
+}
 
 //!Create Grid
 function createGridSquares() {
   const numOfSquares = squaresPerSide * squaresPerSide; //1)calculate the total number of squares to be created in the grid.
-  let widthOrHeight = 0;
+  const widthOrHeight = calculateSquareWidth(
+    gridWidth,
+    squaresPerSide,
+    gridLinesVisible
+  );
+
   for (let i = 0; i < numOfSquares; i++) {
     //2)Cycle to create squares: This loop is run numOfSquares once, and each time a new square is created. That is, the loop repeats as many times as there should be squares in the grid.
     const gridSquare = document.createElement("div"); //*a small square is a container div called qreadSquare.
+    gridSquare.style.flexShrink = "0";
 
     if (gridLinesVisible) {
       //Grid visible -  add an indentation (отступ) is added to the width and height of each square to display the border (1px). Размер квадрата рассчитывается как общая ширина сетки (gridWidth), делённая на количество квадратов на стороне (squaresPerSide).
-      widthOrHeight = `${Math.floor(
-        parseInt(gridWidth) / (squaresPerSide - 2))}px`; //parseInt(строка, системаСчисления)-преобразования строки в целое число. Она извлекает числа из начала строки и игнорирует любые символы, которые идут после числа. Если строка не начинается с числа, результат будет NaN (Not a Number — не число): parseInt("abc123"); // Вернет NaN
       gridSquare.style.border = "1px solid whitesmoke";
-    } else if (!gridLinesVisible) {
-      widthOrHeight = `${Math.floor(parseInt(gridWidth) / squaresPerSide)}px`; //Grid NOT visible - no indentation (отступ) is needed.
-      gridSquare.style.border = "none";
+    } else {
+      gridSquare.style.border = "0";
     }
 
-
-
-
-
-
-
     //!Mause actions:
-    gridSquare.style.width = gridSquare.style.height = widthOrHeight; //устанавливаются размеры квадрата
+    gridSquare.style.width = gridSquare.style.height = widthOrHeight + "px"; //устанавливаются размеры квадрата
 
     gridSquare.addEventListener(
       "mousedown",
@@ -161,10 +155,6 @@ function createGridSquares() {
     sketchArea.appendChild(gridSquare); //Добавление квадрата в контейнер: В конце каждого цикла новый квадрат добавляется в контейнер sketchArea:
   }
 }
-
-
-
-
 
 //удаления всех дочерних элементов внутри контейнера sketchArea. То есть цикл будет работать до тех пор, пока в контейнере остаются какие-то элементы.
 function removeGridSquares() {
